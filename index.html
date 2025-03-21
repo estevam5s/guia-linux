@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guia Completo de Gerenciamento de Discos no Linux</title>
+  <style>
+    :root {
+      --primary-color: #2b2d42;
+      --secondary-color: #8d99ae;
+      --accent-color: #ef233c;
+      --light-color: #edf2f4;
+      --dark-color: #1a1a2e;
+      --success-color: #2a9d8f;
+      --warning-color: #e9c46a;
+      --danger-color: #e63946;
+      --code-bg: #2b2d42;
+      --code-color: #edf2f4;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: var(--dark-color);
+      background-color: var(--light-color);
+      padding-top: 60px;
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: var(--light-color);
+      padding: 1rem;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+    }
+
+    nav ul li {
+      margin-left: 1rem;
+    }
+
+    nav ul li a {
+      color: var(--light-color);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    nav ul li a:hover {
+      color: var(--accent-color);
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 2rem auto;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+    }
+
+    .sidebar {
+      background-color: var(--secondary-color);
+      border-radius: 10px;
+      padding: 1.5rem;
+      position: sticky;
+      top: 80px;
+      height: calc(100vh - 100px);
+      overflow-y: auto;
+    }
+
+    .sidebar h3 {
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--primary-color);
+    }
+
+    .sidebar ul {
+      list-style: none;
+    }
+
+    .sidebar ul li {
+      margin-bottom: 0.5rem;
+    }
+
+    .sidebar ul li a {
+      color: var(--dark-color);
+      text-decoration: none;
+      display: block;
+      padding: 0.5rem;
+      border-radius: 5px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .sidebar ul li a:hover,
+    .sidebar ul li a.active {
+      background-color: var(--primary-color);
+      color: var(--light-color);
+    }
+
+    .content {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .section {
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--secondary-color);
+    }
+
+    .section:last-child {
+      border-bottom: none;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      border-bottom: 3px solid var(--accent-color);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-size: 2rem;
+      margin-top: 2rem;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    h4 {
+      font-size: 1.2rem;
+      margin-top: 1rem;
+    }
+
+    p {
+      margin-bottom: 1rem;
+    }
+
+    ul,
+    ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+    }
+
+    code {
+      background-color: var(--code-bg);
+      color: var(--code-color);
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+    }
+
+    pre {
+      background-color: var(--code-bg);
+      color: var(--code-color);
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+      font-family: 'Courier New', monospace;
+    }
+
+    .command {
+      display: flex;
+      background-color: var(--dark-color);
+      color: var(--light-color);
+      border-radius: 5px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+
+    .command code {
+      flex: 1;
+      padding: 0.7rem;
+      background-color: transparent;
+      color: white;
+    }
+
+    .copy-btn {
+      background-color: var(--primary-color);
+      border: none;
+      color: white;
+      padding: 0.7rem 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .copy-btn:hover {
+      background-color: var(--accent-color);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--secondary-color);
+      padding: 0.75rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--primary-color);
+      color: var(--light-color);
+    }
+
+    tr:nth-child(even) {
+      background-color: rgba(141, 153, 174, 0.1);
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-header {
+      border-bottom: 2px solid var(--secondary-color);
+      padding-bottom: 0.8rem;
+      margin-bottom: 1rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      font-size: 1.2rem;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .info-box {
+      background-color: rgba(141, 153, 174, 0.2);
+      border-left: 4px solid var(--accent-color);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border-radius: 0 5px 5px 0;
+    }
+
+    .info-box.warning {
+      border-left-color: var(--warning-color);
+    }
+
+    .info-box.success {
+      border-left-color: var(--success-color);
+    }
+
+    .info-box.danger {
+      border-left-color: var(--danger-color);
+    }
+
+    .info-box-title {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      color: var(--primary-color);
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: var(--accent-color);
+    }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--secondary-color);
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      cursor: pointer;
+      opacity: 0.6;
+      border-bottom: 3px solid transparent;
+      transition: opacity 0.3s, border-color 0.3s;
+      color: var(--dark-color);
+    }
+
+    .tab-btn.active {
+      opacity: 1;
+      border-bottom-color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    #diskVisualizer {
+      margin: 2rem 0;
+      width: 100%;
+      height: 300px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 1rem;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .search-container {
+      margin-bottom: 1.5rem;
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid var(--secondary-color);
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--light-color);
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+        position: fixed;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        height: calc(100vh - 60px);
+        z-index: 900;
+        border-radius: 0;
+      }
+
+      .sidebar.active {
+        display: block;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      header {
+        padding: 0.8rem;
+      }
+
+      .content {
+        padding: 1rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      h2 {
+        font-size: 1.7rem;
+      }
+
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    :target {
+      scroll-margin-top: 70px;
+    }
+
+    .back-to-top {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background-color: var(--primary-color);
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-decoration: none;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Progress indicator */
+    .progress-container {
+      width: 100%;
+      height: 4px;
+      background: transparent;
+      position: fixed;
+      top: 60px;
+      left: 0;
+      z-index: 1001;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--accent-color);
+      width: 0%;
+    }
+
+    /* Dark mode toggle */
+    .theme-switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+      margin-left: 1rem;
+    }
+
+    .theme-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--secondary-color);
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked+.slider {
+      background-color: var(--accent-color);
+    }
+
+    input:checked+.slider:before {
+      transform: translateX(26px);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Progress Bar -->
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">Gerenciamento de Discos Linux</div>
+    <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+    <nav>
+      <ul>
+        <li><a href="#inicio">Início</a></li>
+        <li><a href="#particoes">Partições</a></li>
+        <li><a href="#formatos">Formatos</a></li>
+        <li><a href="#ferramentas">Ferramentas</a></li>
+        <li>
+          <label class="theme-switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider"></span>
+          </label>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Buscar no conteúdo...">
+      </div>
+      <h3>Conteúdo</h3>
+      <ul id="tableOfContents">
+        <li><a href="#inicio">Introdução</a></li>
+        <li><a href="#particoes">Partições de Disco</a>
+          <ul>
+            <li><a href="#tipos-particoes">Tipos de Partições</a></li>
+            <li><a href="#tabelas-particoes">Tabelas de Partições</a></li>
+            <li><a href="#criar-particoes">Como Criar Partições</a></li>
+            <li><a href="#redimensionar-particoes">Redimensionar Partições</a></li>
+          </ul>
+        </li>
+        <li><a href="#formatos">Formatos de Sistema de Arquivos</a>
+          <ul>
+            <li><a href="#ext4">Ext4</a></li>
+            <li><a href="#btrfs">Btrfs</a></li>
+            <li><a href="#xfs">XFS</a></li>
+            <li><a href="#zfs">ZFS</a></li>
+            <li><a href="#exfat">exFAT</a></li>
+            <li><a href="#ntfs">NTFS</a></li>
+            <li><a href="#fat32">FAT32</a></li>
+            <li><a href="#comparacao">Comparação de Sistemas</a></li>
+          </ul>
+        </li>
+        <li><a href="#formatacao">Formatação de Discos</a>
+          <ul>
+            <li><a href="#comandos-formatacao">Comandos de Formatação</a></li>
+            <li><a href="#formatacao-segura">Formatação Segura</a></li>
+          </ul>
+        </li>
+        <li><a href="#montagem">Montagem de Volumes</a>
+          <ul>
+            <li><a href="#montagem-manual">Montagem Manual</a></li>
+            <li><a href="#montagem-fstab">Montagem com fstab</a></li>
+            <li><a href="#montagem-automatica">Montagem Automática</a></li>
+          </ul>
+        </li>
+        <li><a href="#ferramentas">Ferramentas de Gerenciamento</a>
+          <ul>
+            <li><a href="#fdisk">fdisk</a></li>
+            <li><a href="#parted">parted</a></li>
+            <li><a href="#gparted">GParted</a></li>
+            <li><a href="#lvm">LVM</a></li>
+            <li><a href="#smartctl">smartctl</a></li>
+          </ul>
+        </li>
+        <li><a href="#raid">Configuração de RAID</a>
+          <ul>
+            <li><a href="#raid-tipos">Tipos de RAID</a></li>
+            <li><a href="#raid-software">RAID por Software</a></li>
+            <li><a href="#raid-hardware">RAID por Hardware</a></li>
+          </ul>
+        </li>
+        <li><a href="#problemas">Solução de Problemas</a>
+          <ul>
+            <li><a href="#recuperacao">Recuperação de Dados</a></li>
+            <li><a href="#bad-blocks">Identificação de Bad Blocks</a></li>
+            <li><a href="#erros-comuns">Erros Comuns</a></li>
+          </ul>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <section id="inicio" class="section">
+        <h1>Guia Completo de Gerenciamento de Discos no Linux</h1>
+        <p>Bem-vindo ao guia definitivo sobre gerenciamento de discos, partições e sistemas de arquivos no Linux. Este
+          recurso foi criado para ajudar usuários de todos os níveis a entender como os sistemas Linux lidam com
+          armazenamento, particionamento e formatação.</p>
+
+        <div class="info-box">
+          <div class="info-box-title">Por que este conhecimento é importante?</div>
+          <p>Entender como gerenciar corretamente seus discos no Linux permite:</p>
+          <ul>
+            <li>Organizar eficientemente seu armazenamento</li>
+            <li>Melhorar o desempenho do sistema</li>
+            <li>Evitar perda de dados</li>
+            <li>Configurar sistemas de alta disponibilidade</li>
+            <li>Resolver problemas comuns de armazenamento</li>
+          </ul>
+        </div>
+
+        <h3>Conceitos Básicos</h3>
+        <p>Antes de mergulharmos nos detalhes, vamos entender alguns conceitos fundamentais:</p>
+
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="drives">Dispositivos de Armazenamento</button>
+          <button class="tab-btn" data-tab="partition">Partições</button>
+          <button class="tab-btn" data-tab="filesystem">Sistemas de Arquivos</button>
+        </div>
+
+        <div id="drives" class="tab-content active">
+          <p>No Linux, os dispositivos de armazenamento são representados como arquivos no diretório <code>/dev</code>:
+          </p>
+          <ul>
+            <li><code>/dev/sda</code>, <code>/dev/sdb</code> - Discos SATA/SAS/USB</li>
+            <li><code>/dev/nvme0n1</code> - Discos NVMe</li>
+            <li><code>/dev/mmcblk0</code> - Cartões SD/eMMC</li>
+          </ul>
+          <p>O Linux atribui letras aos discos em ordem de detecção. As partições são numeradas: <code>/dev/sda1</code>,
+            <code>/dev/sda2</code>, etc.</p>
+        </div>
+
+        <div id="partition" class="tab-content">
+          <p>Uma partição é uma divisão lógica de um disco físico. Cada partição pode ter seu próprio sistema de
+            arquivos e funcionar como um dispositivo independente.</p>
+
+          <p>Razões para particionar um disco:</p>
+          <ul>
+            <li>Separar o sistema operacional dos dados do usuário</li>
+            <li>Instalar múltiplos sistemas operacionais</li>
+            <li>Organizar dados por tipo ou importância</li>
+            <li>Otimizar desempenho e backup</li>
+            <li>Limitar o espaço disponível para determinados usos</li>
+          </ul>
+        </div>
+
+        <div id="filesystem" class="tab-content">
+          <p>O sistema de arquivos é a estrutura que define como os dados são armazenados e recuperados em uma partição.
+            Cada sistema de arquivos tem suas características:</p>
+
+          <ul>
+            <li><strong>ext4</strong>: Sistema padrão para muitas distribuições Linux</li>
+            <li><strong>Btrfs</strong>: Sistema moderno com recursos avançados como snapshots</li>
+            <li><strong>XFS</strong>: Otimizado para arquivos grandes e alta performance</li>
+            <li><strong>ZFS</strong>: Sistema avançado com proteção de dados integrada</li>
+            <li><strong>exFAT</strong>: Para compatibilidade entre Linux, macOS e Windows</li>
+          </ul>
+        </div>
+
+        <h3>Anatomia de um Disco no Linux</h3>
+        <div id="diskVisualizer">
+          <canvas id="diskCanvas"></canvas>
+        </div>
+      </section>
+
+      <section id="particoes" class="section">
+        <h2>Partições de Disco</h2>
+        <p>As partições são divisões lógicas de um disco físico que permitem organizar o armazenamento de forma mais
+          eficiente. Vamos explorar tudo sobre partições no Linux.</p>
+
+        <h3 id="tipos-particoes">Tipos de Partições</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Descrição</th>
+                <th>Uso Comum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Primária</td>
+                <td>Partição principal que pode conter um sistema de arquivos ou outras partições</td>
+                <td>Sistemas operacionais, dados críticos</td>
+              </tr>
+              <tr>
+                <td>Estendida</td>
+                <td>Um tipo especial de partição primária que pode conter múltiplas partições lógicas</td>
+                <td>Criar mais de 4 partições em discos MBR</td>
+              </tr>
+              <tr>
+                <td>Lógica</td>
+                <td>Partições criadas dentro de uma partição estendida</td>
+                <td>Armazenamento de dados, home directories</td>
+              </tr>
+              <tr>
+                <td>SWAP</td>
+                <td>Espaço usado como memória virtual</td>
+                <td>Complemento à RAM física</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-box warning">
+          <div class="info-box-title">Atenção</div>
+          <p>No esquema MBR, você só pode ter até 4 partições primárias ou 3 primárias e 1 estendida. O esquema GPT não
+            tem esta limitação e permite até 128 partições.</p>
+        </div>
+
+        <h3 id="tabelas-particoes">Tabelas de Partições</h3>
+        <div class="comparison-grid">
+          <div class="card">
+            <div class="card-header">MBR (Master Boot Record)</div>
+            <ul>
+              <li>Esquema tradicional de particionamento</li>
+              <li>Suporta discos de até 2TB</li>
+              <li>Limitado a 4 partições primárias</li>
+              <li>Compatível com sistemas legados</li>
+              <li>Menor confiabilidade (uma única cópia da tabela)</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-header">GPT (GUID Partition Table)</div>
+            <ul>
+              <li>Esquema moderno de particionamento</li>
+              <li>Suporta discos maiores que 2TB</li>
+              <li>Até 128 partições</li>
+              <li>Maior confiabilidade (tabela redundante)</li>
+              <li>Requer UEFI para boot (embora haja exceções)</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 id="criar-particoes">Como Criar Partições</h3>
+        <p>Existem várias ferramentas para criar partições no Linux. Aqui veremos como usar o <code>fdisk</code>, uma
+          ferramenta de linha de comando tradicional:</p>
+
+        <div class="command">
+          <code>sudo fdisk -l</code>
+          <button class="copy-btn" data-command="sudo fdisk -l">Copiar</button>
+        </div>
+
+        <p>Este comando lista todos os discos e partições do sistema. Para criar partições em um disco específico:</p>
+
+        <div class="command">
+          <code>sudo fdisk /dev/sda</code>
+          <button class="copy-btn" data-command="sudo fdisk /dev/sda">Copiar</button>
+        </div>
+
+        <p>Dentro do fdisk, você pode usar os seguintes comandos:</p>
+        <ul>
+          <li><code>m</code>: Exibir o menu de ajuda</li>
+          <li><code>n</code>: Criar uma nova partição</li>
+          <li><code>p</code>: Mostrar a tabela de partições atual</li>
+          <li><code>d</code>: Deletar uma partição</li>
+          <li><code>w</code>: Salvar alterações e sair</li>
+          <li><code>q</code>: Sair sem salvar alterações</li>
+        </ul>
+
+        <p>Exemplo de criação de uma partição usando fdisk:</p>
+
+        <pre>
+# Inicie o fdisk no disco desejado
+sudo fdisk /dev/sdb
+
+# Digite 'n' para criar uma nova partição
+Command (m for help): n
+
+# Escolha o tipo de partição (p=primária, e=estendida)
+Partition type: p
+
+# Escolha o número da partição
+Partition number (1-4): 1
+
+# Aceite o setor inicial padrão ou especifique um
+First sector: [padrão]
+
+# Defina o tamanho da partição (último setor ou tamanho específico)
+Last sector: +10G
+
+# Digite 'w' para salvar as alterações
+Command (m for help): w
+                </pre>
+
+        <h3 id="redimensionar-particoes">Redimensionar Partições</h3>
+        <p>Redimensionar partições no Linux geralmente requer que elas estejam desmontadas, especialmente para reduzir o
+          tamanho. O <code>parted</code> ou <code>gparted</code> são ferramentas recomendadas para isso.</p>
+
+        <div class="command">
+          <code>sudo parted /dev/sda resizepart 1 20GB</code>
+          <button class="copy-btn" data-command="sudo parted /dev/sda resizepart 1 20GB">Copiar</button>
+        </div>
+
+        <p>Este comando redimensiona a primeira partição de /dev/sda para 20GB. Após redimensionar a partição, você
+          também precisa redimensionar o sistema de arquivos:</p>
+
+        <div class="command">
+          <code>sudo resize2fs /dev/sda1</code>
+          <button class="copy-btn" data-command="sudo resize2fs /dev/sda1">Copiar</button>
+        </div>
+
+        <div class="info-box danger">
+          <div class="info-box-title">Importante</div>
+          <p>Sempre faça backup dos seus dados antes de redimensionar partições. Este processo pode resultar em perda de
+            dados se houver falhas ou interrupções durante o processo. Reduzir o tamanho de uma partição é
+            particularmente arriscado comparado com expandir uma partição.</p>
+        </div>
+
+        <section id="formatos" class="section">
+          <h2>Formatos de Sistema de Arquivos</h2>
+          <p>O sistema de arquivos define como os dados são organizados e armazenados em uma partição. Cada sistema tem
+            suas vantagens e desvantagens. Vamos analisar os principais sistemas de arquivos disponíveis no Linux.</p>
+
+          <h3 id="ext4">Ext4</h3>
+          <p>O Ext4 (Fourth Extended Filesystem) é o sucessor do Ext3 e o sistema de arquivos mais comumente usado em
+            distribuições Linux.</p>
+
+          <div class="card">
+            <div class="card-header">Características do Ext4</div>
+            <ul>
+              <li>Suporta volumes de até 1 EiB</li>
+              <li>Tamanho máximo de arquivo de 16 TiB</li>
+              <li>Journaling para proteção contra corrupção</li>
+              <li>Alocação tardia para melhor performance</li>
+              <li>Desfragmentação online</li>
+              <li>Verificação de integridade melhorada</li>
+            </ul>
+          </div>
+
+          <div class="command">
+            <code>sudo mkfs.ext4 /dev/sda1</code>
+            <button class="copy-btn" data-command="sudo mkfs.ext4 /dev/sda1">Copiar</button>
+          </div>
+
+          <h3 id="btrfs">Btrfs</h3>
+          <p>O Btrfs (B-tree File System) é um sistema de arquivos mais moderno com recursos avançados de gerenciamento
+            de armazenamento.</p>
+
+          <div class="card">
+            <div class="card-header">Características do Btrfs</div>
+            <ul>
+              <li>Sistema baseado em Copy-on-Write (COW)</li>
+              <li>Snapshots e clones integrados</li>
+              <li>Compressão transparente</li>
+              <li>Suporte nativo a RAID</li>
+              <li>Auto-correção de dados com checksums</li>
+              <li>Suporte a subvolumes</li>
+            </ul>
+          </div>
+
+          <div class="command">
+            <code>sudo mkfs.btrfs /dev/sda1</code>
+            <button class="copy-btn" data-command="sudo mkfs.btrfs /dev/sda1">Copiar</button>
+          </div>
+
+          <h3 id="xfs">XFS</h3>
+          <p>O XFS é um sistema de arquivos de alto desempenho, originalmente desenvolvido pela Silicon Graphics.</p>
+
+          <div class="card">
+            <div class="card-header">Características do XFS</div>
+            <ul>
+              <li>Excelente desempenho para arquivos grandes</li>
+              <li>Escalabilidade para servidores de grande porte</li>
+              <li>Suporte a volumes de até 8 EiB</li>
+              <li>Journaling para metadados</li>
+              <li>Recuperação rápida após falhas</li>
+              <li>Não pode ser reduzido (apenas expandido)</li>
+            </ul>
+          </div>
+
+          <div class="command">
+            <code>sudo mkfs.xfs /dev/sda1</code>
+            <button class="copy-btn" data-command="sudo mkfs.xfs /dev/sda1">Copiar</button>
+          </div>
+
+          <h3 id="zfs">ZFS</h3>
+          <p>O ZFS é um sistema de arquivos avançado originalmente desenvolvido pela Sun Microsystems.</p>
+
+          <div class="card">
+            <div class="card-header">Características do ZFS</div>
+            <ul>
+              <li>Proteção de dados integrada</li>
+              <li>Deduplicação e compressão</li>
+              <li>Snapshots e clones</li>
+              <li>Gerenciamento de pools de armazenamento</li>
+              <li>Auto-reparação de dados</li>
+              <li>Compatibilidade limitada no Linux devido a licenciamento</li>
+            </ul>
+          </div>
+
+          <div class="command">
+            <code>sudo zpool create mypool /dev/sda1</code>
+            <button class="copy-btn" data-command="sudo zpool create mypool /dev/sda1">Copiar</button>
+          </div>
+
+          <h3 id="exfat">exFAT</h3>
+          <p>O exFAT (Extended File Allocation Table) é um sistema de arquivos proprietário da Microsoft, mas suportado
+            pelo Linux.</p>
+
+          <div class="card">
+            <div class="card-header">Características do exFAT</div>
+            <ul>
+              <li>Compatibilidade com Windows, macOS e Linux</li>
+              <li>Suporte a arquivos maiores que 4GB</li>
+              <li>Menor sobrecarga que o NTFS</li>
+              <li>Não tem journaling (menos proteção contra corrupção)</li>
+              <li>Bom para unidades externas compartilhadas entre sistemas</li>
+            </ul>
+          </div>
+
+          <div class="command">
+            <code>sudo mkfs.exfat /dev/sda1</code>
+            <button class="copy-btn" data-command="sudo mkfs.exfat /dev/sda1">Copiar</button>
+          </div>
+
+          <h3 id="ntfs">NTFS</h3>
+          <p>O NTFS (New Technology File System) é o sistema de arquivos padrão do Windows, com suporte de leitura e
+            escrita no Linux.</p>
+
+          <div class="card">
+            <div class="card-header">Características do NTFS</div>
+            <ul>
+              <li>Compatibilidade com Windows</li>
+              <li>Journaling para proteção de dados</li>
+              <li>Suporte a permissões e criptografia</li>
+              <li>No Linux, requer o pacote ntfs-3g para escrita</li>
+              <li>Performance inferior em Linux comparado a sistemas nativos</li>
+            </ul>
+          </div>
+
+          <div class="command">
+            <code>sudo mkfs.ntfs /dev/sda1</code>
+            <button class="copy-btn" data-command="sudo mkfs.ntfs /dev/sda1">Copiar</button>
+          </div>
+
+          <h3 id="fat32">FAT32</h3>
+          <p>O FAT32 é um sistema mais antigo, mas ainda amplamente utilizado para compatibilidade.</p>
+
+          <div class="card">
+            <div class="card-header">Características do FAT32</div>
+            <ul>
+              <li>Compatibilidade universal (Windows, macOS, Linux, dispositivos embarcados)</li>
+              <li>Limitado a arquivos de 4GB</li>
+              <li>Limitado a volumes de 32GB em Windows (maior em Linux)</li>
+              <li>Sem journaling ou recursos avançados</li>
+              <li>Ideal para dispositivos pequenos e mídia removível</li>
+            </ul>
+          </div>
+
+          <div class="command">
+            <code>sudo mkfs.fat -F 32 /dev/sda1</code>
+            <button class="copy-btn" data-command="sudo mkfs.fat -F 32 /dev/sda1">Copiar</button>
+          </div>
+
+          <h3 id="comparacao">Comparação de Sistemas de Arquivos</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Sistema</th>
+                  <th>Max. Volume</th>
+                  <th>Max. Arquivo</th>
+                  <th>Journaling</th>
+                  <th>Snapshots</th>
+                  <th>Compressão</th>
+                  <th>Compatibilidade</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Ext4</td>
+                  <td>1 EiB</td>
+                  <td>16 TiB</td>
+                  <td>Sim</td>
+                  <td>Não</td>
+                  <td>Não (nativo)</td>
+                  <td>Linux</td>
+                </tr>
+                <tr>
+                  <td>Btrfs</td>
+                  <td>16 EiB</td>
+                  <td>16 EiB</td>
+                  <td>Sim</td>
+                  <td>Sim</td>
+                  <td>Sim</td>
+                  <td>Linux</td>
+                </tr>
+                <tr>
+                  <td>XFS</td>
+                  <td>8 EiB</td>
+                  <td>8 EiB</td>
+                  <td>Sim (metadados)</td>
+                  <td>Não</td>
+                  <td>Não</td>
+                  <td>Linux</td>
+                </tr>
+                <tr>
+                  <td>ZFS</td>
+                  <td>256 ZiB</td>
+                  <td>16 EiB</td>
+                  <td>Sim</td>
+                  <td>Sim</td>
+                  <td>Sim</td>
+                  <td>Linux, FreeBSD, Solaris</td>
+                </tr>
+                <tr>
+                  <td>exFAT</td>
+                  <td>128 PiB</td>
+                  <td>16 EiB</td>
+                  <td>Não</td>
+                  <td>Não</td>
+                  <td>Não</td>
+                  <td>Windows, macOS, Linux</td>
+                </tr>
+                <tr>
+                  <td>NTFS</td>
+                  <td>256 TiB</td>
+                  <td>16 TiB</td>
+                  <td>Sim</td>
+                  <td>Não</td>
+                  <td>Sim</td>
+                  <td>Windows, Linux (com ntfs-3g)</td>
+                </tr>
+                <tr>
+                  <td>FAT32</td>
+                  <td>2 TiB</td>
+                  <td>4 GiB</td>
+                  <td>Não</td>
+                  <td>Não</td>
+                  <td>Não</td>
+                  <td>Universal</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="formatacao" class="section">
+          <h2>Formatação de Discos</h2>
+          <p>A formatação é o processo de preparar um dispositivo de armazenamento para uso, criando um sistema de
+            arquivos específico. Vamos ver como formatar discos no Linux.</p>
+
+          <h3 id="comandos-formatacao">Comandos de Formatação</h3>
+          <p>Cada sistema de arquivos tem seu próprio comando de formatação:</p>
+
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="format-ext">Ext4</button>
+            <button class="tab-btn" data-tab="format-btrfs">Btrfs</button>
+            <button class="tab-btn" data-tab="format-xfs">XFS</button>
+            <button class="tab-btn" data-tab="format-fat">FAT/exFAT</button>
+          </div>
+
+          <div id="format-ext" class="tab-content active">
+            <p>Para formatar uma partição com Ext4:</p>
+            <div class="command">
+              <code>sudo mkfs.ext4 -L "NOME_VOLUME" /dev/sda1</code>
+              <button class="copy-btn" data-command="sudo mkfs.ext4 -L 'NOME_VOLUME' /dev/sda1">Copiar</button>
+            </div>
+            <p>Opções comuns:</p>
+            <ul>
+              <li><code>-L</code>: Define o rótulo (label) do volume</li>
+              <li><code>-m</code>: Porcentagem de blocos reservados para o superusuário</li>
+              <li><code>-O</code>: Especifica recursos a serem usados (ou desativados)</li>
+            </ul>
+          </div>
+
+          <div id="format-btrfs" class="tab-content">
+            <p>Para formatar uma partição com Btrfs:</p>
+            <div class="command">
+              <code>sudo mkfs.btrfs -L "NOME_VOLUME" /dev/sda1</code>
+              <button class="copy-btn" data-command="sudo mkfs.btrfs -L 'NOME_VOLUME' /dev/sda1">Copiar</button>
+            </div>
+            <p>Criar um volume RAID1 com Btrfs:</p>
+            <div class="command">
+              <code>sudo mkfs.btrfs -L "RAID1_VOLUME" -d raid1 -m raid1 /dev/sda1 /dev/sdb1</code>
+              <button class="copy-btn"
+                data-command="sudo mkfs.btrfs -L 'RAID1_VOLUME' -d raid1 -m raid1 /dev/sda1 /dev/sdb1">Copiar</button>
+            </div>
+          </div>
+
+          <div id="format-xfs" class="tab-content">
+            <p>Para formatar uma partição com XFS:</p>
+            <div class="command">
+              <code>sudo mkfs.xfs -L "NOME_VOLUME" /dev/sda1</code>
+              <button class="copy-btn" data-command="sudo mkfs.xfs -L 'NOME_VOLUME' /dev/sda1">Copiar</button>
+            </div>
+            <p>Opções comuns:</p>
+            <ul>
+              <li><code>-b</code>: Tamanho de bloco (valores em bytes)</li>
+              <li><code>-s</code>: Tamanho do setor de log</li>
+              <li><code>-d</code>: Opções específicas para dados</li>
+            </ul>
+          </div>
+
+          <div id="format-fat" class="tab-content">
+            <p>Para formatar como FAT32:</p>
+            <div class="command">
+              <code>sudo mkfs.fat -F 32 -n "NOME_VOLUME" /dev/sda1</code>
+              <button class="copy-btn" data-command="sudo mkfs.fat -F 32 -n 'NOME_VOLUME' /dev/sda1">Copiar</button>
+            </div>
+            <p>Para formatar como exFAT:</p>
+            <div class="command">
+              <code>sudo mkfs.exfat -n "NOME_VOLUME" /dev/sda1</code>
+              <button class="copy-btn" data-command="sudo mkfs.exfat -n 'NOME_VOLUME' /dev/sda1">Copiar</button>
+            </div>
+          </div>
+
+          <h3 id="formatacao-segura">Formatação Segura</h3>
+          <p>Para garantir que dados antigos não possam ser recuperados, você pode realizar uma formatação segura:</p>
+
+          <div class="info-box warning">
+            <div class="info-box-title">Atenção</div>
+            <p>Esta operação é irreversível e pode levar muito tempo em discos grandes.</p>
+          </div>
+
+          <div class="command">
+            <code>sudo shred -v -n 1 -z /dev/sda1</code>
+            <button class="copy-btn" data-command="sudo shred -v -n 1 -z /dev/sda1">Copiar</button>
+          </div>
+
+          <p>Parâmetros do comando <code>shred</code>:</p>
+          <ul>
+            <li><code>-v</code>: Modo verboso (mostra progresso)</li>
+            <li><code>-n 1</code>: Número de passagens (1 é suficiente para discos modernos)</li>
+            <li><code>-z</code>: Adiciona uma passagem final de zeros</li>
+          </ul>
+        </section>
+
+        <section id="montagem" class="section">
+          <h2>Montagem de Volumes</h2>
+          <p>Após particionar e formatar, é preciso montar os volumes para acessar os arquivos. Vamos explorar as
+            diferentes formas de montagem no Linux.</p>
+
+          <h3 id="montagem-manual">Montagem Manual</h3>
+          <p>O comando <code>mount</code> é usado para montar sistemas de arquivos manualmente:</p>
+
+          <div class="command">
+            <code>sudo mount /dev/sda1 /mnt/dados</code>
+            <button class="copy-btn" data-command="sudo mount /dev/sda1 /mnt/dados">Copiar</button>
+          </div>
+
+          <p>Montar com opções específicas:</p>
+          <div class="command">
+            <code>sudo mount -o rw,noatime,users /dev/sda1 /mnt/dados</code>
+            <button class="copy-btn" data-command="sudo mount -o rw,noatime,users /dev/sda1 /mnt/dados">Copiar</button>
+          </div>
+
+          <p>Desmontar um sistema de arquivos:</p>
+          <div class="command">
+            <code>sudo umount /mnt/dados</code>
+            <button class="copy-btn" data-command="sudo umount /mnt/dados">Copiar</button>
+          </div>
+
+          <p>Principais opções de montagem:</p>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Opção</th>
+                  <th>Descrição</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>rw</td>
+                  <td>Montar com acesso de leitura e escrita (padrão)</td>
+                </tr>
+                <tr>
+                  <td>ro</td>
+                  <td>Montar somente para leitura</td>
+                </tr>
+                <tr>
+                  <td>noatime</td>
+                  <td>Não atualizar os tempos de acesso (melhora desempenho)</td>
+                </tr>
+                <tr>
+                  <td>users</td>
+                  <td>Permite usuários comuns montarem/desmontarem</td>
+                </tr>
+                <tr>
+                  <td>exec/noexec</td>
+                  <td>Permite/proíbe execução de binários no sistema montado</td>
+                </tr>
+                <tr>
+                  <td>auto/noauto</td>
+                  <td>Monta/não monta automaticamente com comando "mount -a"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 id="montagem-fstab">Montagem com fstab</h3>
+          <p>O arquivo <code>/etc/fstab</code> controla quais sistemas de arquivos são montados automaticamente na
+            inicialização.</p>
+
+          <p>Estrutura de uma linha no fstab:</p>
+          <pre>
+              # &lt;dispositivo&gt; &lt;ponto de montagem&gt; &lt;tipo&gt; &lt;opções&gt; &lt;dump&gt; &lt;pass&gt;
+              /dev/sda1    /home    ext4    defaults,noatime    0    2
+              UUID=1234-5678    /dados    xfs    defaults    0    0</pre>
+
+          <div class="info-box">
+            <div class="info-box-title">Dica</div>
+            <p>Use UUIDs em vez de nomes de dispositivo para garantir que as montagens permaneçam corretas mesmo se a
+              ordem dos discos mudar.</p>
+          </div>
+
+          <div class="command">
+            <code>sudo blkid</code>
+            <button class="copy-btn" data-command="sudo blkid">Copiar</button>
+          </div>
+
+          <p>Para aplicar as alterações do fstab sem reiniciar:</p>
+          <div class="command">
+            <code>sudo mount -a</code>
+            <button class="copy-btn" data-command="sudo mount -a">Copiar</button>
+          </div>
+
+          <h3 id="montagem-automatica">Montagem Automática</h3>
+          <p>O Linux também oferece serviços para montagem automática de dispositivos removíveis:</p>
+
+          <div class="card">
+            <div class="card-header">udisks2</div>
+            <p>Sistema moderno para gerenciamento de dispositivos de armazenamento que habilita montagem automática em
+              ambientes desktop.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-header">autofs</div>
+            <p>Serviço que monta sistemas de arquivos sob demanda e os desmonta automaticamente quando não estão em uso.
+            </p>
+            <div class="command">
+              <code>sudo apt install autofs</code>
+              <button class="copy-btn" data-command="sudo apt install autofs">Copiar</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="ferramentas" class="section">
+          <h2>Ferramentas de Gerenciamento</h2>
+          <p>O Linux oferece diversas ferramentas para gerenciar discos e partições. Vejamos as principais:</p>
+
+          <h3 id="fdisk">fdisk</h3>
+          <p>Ferramenta tradicional de linha de comando para gerenciamento de partições.</p>
+          <div class="command">
+            <code>sudo fdisk -l</code>
+            <button class="copy-btn" data-command="sudo fdisk -l">Copiar</button>
+          </div>
+          <p>Principais recursos:</p>
+          <ul>
+            <li>Interface baseada em menu</li>
+            <li>Suporte a MBR e GPT</li>
+            <li>Alterações só são aplicadas após salvar</li>
+            <li>Não redimensiona sistemas de arquivos</li>
+          </ul>
+
+          <h3 id="parted">parted</h3>
+          <p>Uma ferramenta mais avançada para gerenciamento de partições.</p>
+          <div class="command">
+            <code>sudo parted /dev/sda print</code>
+            <button class="copy-btn" data-command="sudo parted /dev/sda print">Copiar</button>
+          </div>
+          <p>Principais recursos:</p>
+          <ul>
+            <li>Suporte nativo a várias tabelas de partição</li>
+            <li>Pode redimensionar partições e alguns sistemas de arquivos</li>
+            <li>Aplicação imediata das alterações</li>
+            <li>Interface de linha de comando mais poderosa</li>
+          </ul>
+
+          <h3 id="gparted">GParted</h3>
+          <p>Interface gráfica para gerenciamento de partições, baseada no parted.</p>
+          <div class="command">
+            <code>sudo apt install gparted</code>
+            <button class="copy-btn" data-command="sudo apt install gparted">Copiar</button>
+          </div>
+          <p>Principais recursos:</p>
+          <ul>
+            <li>Interface gráfica intuitiva</li>
+            <li>Visualização clara do espaço usado/livre</li>
+            <li>Redimensionamento de partições e diversos sistemas de arquivos</li>
+            <li>Operações em fila (multiple operations)</li>
+            <li>Live CD/USB disponível para operações mais complexas</li>
+          </ul>
+
+          <h3 id="lvm">LVM</h3>
+          <p>O Logical Volume Manager (LVM) é uma camada de abstração sobre partições físicas que oferece gerenciamento
+            flexível de volumes.</p>
+          <div class="info-box">
+            <div class="info-box-title">Vantagens do LVM</div>
+            <ul>
+              <li>Redimensionamento dinâmico de volumes</li>
+              <li>Expansão de volumes além dos limites físicos de um disco</li>
+              <li>Snapshots para backup</li>
+              <li>Migração de dados entre dispositivos em uso</li>
+            </ul>
+          </div>
+
+          <p>Comandos básicos do LVM:</p>
+          <pre>
+              # Criar um volume físico (PV)
+              sudo pvcreate /dev/sda1
+              
+              # Criar um grupo de volumes (VG)
+              sudo vgcreate meugrupo /dev/sda1 /dev/sdb1
+              
+              # Criar um volume lógico (LV)
+              sudo lvcreate -n meudados -L 10G meugrupo
+              
+              # Formatar o volume lógico
+              sudo mkfs.ext4 /dev/meugrupo/meudados
+              
+              # Montar o volume lógico
+              sudo mount /dev/meugrupo/meudados /mnt/dados</pre>
+
+          <h3 id="smartctl">smartctl</h3>
+          <p>Ferramenta para monitorar a saúde dos discos através da tecnologia S.M.A.R.T.</p>
+          <div class="command">
+            <code>sudo apt install smartmontools</code>
+            <button class="copy-btn" data-command="sudo apt install smartmontools">Copiar</button>
+          </div>
+          <p>Verificar saúde de um disco:</p>
+          <div class="command">
+            <code>sudo smartctl -a /dev/sda</code>
+            <button class="copy-btn" data-command="sudo smartctl -a /dev/sda">Copiar</button>
+          </div>
+          <p>Executar um teste de curta duração:</p>
+          <div class="command">
+            <code>sudo smartctl -t short /dev/sda</code>
+            <button class="copy-btn" data-command="sudo smartctl -t short /dev/sda">Copiar</button>
+          </div>
+        </section>
+
+        <section id="raid" class="section">
+          <h2>Configuração de RAID</h2>
+          <p>RAID (Redundant Array of Independent Disks) é uma tecnologia que combina múltiplos discos para maior
+            desempenho, capacidade ou redundância.</p>
+
+          <h3 id="raid-tipos">Tipos de RAID</h3>
+          <div class="comparison-grid">
+            <div class="card">
+              <div class="card-header">RAID 0 (Striping)</div>
+              <ul>
+                <li>Dados divididos entre discos</li>
+                <li>Maior desempenho de leitura/escrita</li>
+                <li>Capacidade total dos discos combinados</li>
+                <li>Sem redundância (falha em um disco = perda total)</li>
+                <li>Mínimo de 2 discos</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="card-header">RAID 1 (Mirroring)</div>
+              <ul>
+                <li>Dados duplicados em múltiplos discos</li>
+                <li>Melhor performance de leitura</li>
+                <li>Capacidade igual ao menor disco</li>
+                <li>Redundância total (tolera falha de disco)</li>
+                <li>Mínimo de 2 discos</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="card-header">RAID 5</div>
+              <ul>
+                <li>Dados + informação de paridade distribuídos</li>
+                <li>Boa performance de leitura</li>
+                <li>Capacidade = (n-1) discos</li>
+                <li>Tolera falha de um disco</li>
+                <li>Mínimo de 3 discos</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="card-header">RAID 6</div>
+              <ul>
+                <li>Dados + dupla paridade distribuídos</li>
+                <li>Performance de leitura similar ao RAID 5</li>
+                <li>Capacidade = (n-2) discos</li>
+                <li>Tolera falha de até dois discos</li>
+                <li>Mínimo de 4 discos</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="card-header">RAID 10 (1+0)</div>
+              <ul>
+                <li>Combinação de mirroring e striping</li>
+                <li>Excelente performance e redundância</li>
+                <li>Capacidade = total/2</li>
+                <li>Tolera múltiplas falhas (dependendo do arranjo)</li>
+                <li>Mínimo de 4 discos</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 id="raid-software">RAID por Software</h3>
+          <p>O Linux oferece suporte nativo a RAID por software através do <code>mdadm</code>:</p>
+          <div class="command">
+            <code>sudo apt install mdadm</code>
+            <button class="copy-btn" data-command="sudo apt install mdadm">Copiar</button>
+          </div>
+
+          <p>Criar um RAID 1:</p>
+          <div class="command">
+            <code>sudo mdadm --create --verbose /dev/md0 --level=1 --raid-devices=2 /dev/sda1 /dev/sdb1</code>
+            <button class="copy-btn"
+              data-command="sudo mdadm --create --verbose /dev/md0 --level=1 --raid-devices=2 /dev/sda1 /dev/sdb1">Copiar</button>
+          </div>
+
+          <p>Verificar o status do RAID:</p>
+          <div class="command">
+            <code>sudo mdadm --detail /dev/md0</code>
+            <button class="copy-btn" data-command="sudo mdadm --detail /dev/md0">Copiar</button>
+          </div>
+
+          <p>Monitorar o RAID em tempo real:</p>
+          <div class="command">
+            <code>sudo watch cat /proc/mdstat</code>
+            <button class="copy-btn" data-command="sudo watch cat /proc/mdstat">Copiar</button>
+          </div>
+
+          <div class="info-box warning">
+            <div class="info-box-title">Importante</div>
+            <p>Depois de criar um RAID, não esqueça de salvar a configuração:</p>
+            <div class="command">
+              <code>sudo mdadm --detail --scan | sudo tee -a /etc/mdadm/mdadm.conf</code>
+              <button class="copy-btn"
+                data-command="sudo mdadm --detail --scan | sudo tee -a /etc/mdadm/mdadm.conf">Copiar</button>
+            </div>
+            <p>E depois atualize o initramfs:</p>
+            <div class="command">
+              <code>sudo update-initramfs -u</code>
+              <button class="copy-btn" data-command="sudo update-initramfs -u">Copiar</button>
+            </div>
+          </div>
+
+          <h3 id="raid-hardware">RAID por Hardware</h3>
+          <p>Os controladores RAID por hardware têm suas próprias ferramentas específicas. A maioria oferece:</p>
+          <ul>
+            <li>Interface BIOS para configuração durante boot</li>
+            <li>Utilitários específicos do fabricante para gerenciamento no sistema operacional</li>
+            <li>Desempenho superior ao RAID por software</li>
+            <li>Independência da CPU do sistema</li>
+          </ul>
+
+          <p>Ferramentas comuns para controladores específicos:</p>
+          <ul>
+            <li>LSI/Broadcom: <code>megacli</code>, <code>storcli</code></li>
+            <li>Adaptec: <code>arcconf</code></li>
+            <li>Dell PERC: <code>perccli</code></li>
+            <li>HP Smart Array: <code>hpacucli</code>, <code>ssacli</code></li>
+          </ul>
+        </section>
+
+        <section id="problemas" class="section">
+          <h2>Solução de Problemas</h2>
+          <p>Mesmo com os melhores cuidados, problemas com discos podem ocorrer. Vamos ver como identificá-los e
+            resolvê-los.</p>
+
+          <h3 id="recuperacao">Recuperação de Dados</h3>
+          <p>Quando um sistema de arquivos está danificado, existem várias ferramentas que podem ajudar:</p>
+
+          <div class="card">
+            <div class="card-header">TestDisk</div>
+            <p>Ferramenta poderosa para recuperação de partições perdidas ou corrompidas.</p>
+            <div class="command">
+              <code>sudo apt install testdisk</code>
+              <button class="copy-btn" data-command="sudo apt install testdisk">Copiar</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">PhotoRec</div>
+            <p>Recupera arquivos mesmo quando a tabela de partições ou sistema de arquivos está severamente danificado.
+            </p>
+            <div class="command">
+              <code>sudo apt install testdisk</code>
+              <button class="copy-btn" data-command="sudo apt install testdisk">Copiar</button>
+            </div>
+            <p>(O PhotoRec vem incluído no pacote TestDisk)</p>
+          </div>
+
+          <div class="card">
+            <div class="card-header">ddrescue</div>
+            <p>Recupera dados de discos com problemas físicos, criando imagens parciais.</p>
+            <div class="command">
+              <code>sudo apt install gddrescue</code>
+              <button class="copy-btn" data-command="sudo apt install gddrescue">Copiar</button>
+            </div>
+            <p>Exemplo de uso:</p>
+            <div class="command">
+              <code>sudo ddrescue -d -r3 /dev/sda1 /dev/sdb1 rescue.log</code>
+              <button class="copy-btn"
+                data-command="sudo ddrescue -d -r3 /dev/sda1 /dev/sdb1 rescue.log">Copiar</button>
+            </div>
+          </div>
+
+          <h3 id="bad-blocks">Identificação de Bad Blocks</h3>
+          <p>Para verificar se um disco tem setores defeituosos (bad blocks):</p>
+
+          <div class="command">
+            <code>sudo badblocks -v /dev/sda > bad-blocks.txt</code>
+            <button class="copy-btn" data-command="sudo badblocks -v /dev/sda > bad-blocks.txt">Copiar</button>
+          </div>
+
+          <p>Para teste não destrutivo de leitura/escrita (CUIDADO: faz backup dos dados primeiro!):</p>
+          <div class="command">
+            <code>sudo badblocks -wsv /dev/sda</code>
+            <button class="copy-btn" data-command="sudo badblocks -wsv /dev/sda">Copiar</button>
+          </div>
+
+          <p>Incorporar lista de bad blocks ao sistema de arquivos ext4:</p>
+          <div class="command">
+            <code>sudo e2fsck -l bad-blocks.txt /dev/sda1</code>
+            <button class="copy-btn" data-command="sudo e2fsck -l bad-blocks.txt /dev/sda1">Copiar</button>
+          </div>
+
+          <h3 id="erros-comuns">Erros Comuns</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Problema</th>
+                  <th>Possíveis Causas</th>
+                  <th>Soluções</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Disco em modo somente leitura</td>
+                  <td>Sistema de arquivos corrompido, erro de hardware</td>
+                  <td>Executar fsck, verificar logs do sistema</td>
+                </tr>
+                <tr>
+                  <td>Partição não aparece</td>
+                  <td>Tabela de partições corrompida</td>
+                  <td>Usar TestDisk para recuperar a tabela</td>
+                </tr>
+                <tr>
+                  <td>"No space left on device"</td>
+                  <td>Disco cheio ou inodes esgotados</td>
+                  <td>Verificar com <code>df -h</code> e <code>df -i</code></td>
+                </tr>
+                <tr>
+                  <td>I/O errors</td>
+                  <td>Falha física no disco, cabos defeituosos</td>
+                  <td>Verificar logs de sistema, SMART, substituir hardware</td>
+                </tr>
+                <tr>
+                  <td>Impossível montar NTFS</td>
+                  <td>Sistema não está limpo ou falta ntfs-3g</td>
+                  <td>Instalar ntfs-3g, usar Windows para fazer chkdsk</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="command">
+            <code>sudo apt install ntfs-3g</code>
+            <button class="copy-btn" data-command="sudo apt install ntfs-3g">Copiar</button>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title">Dica de Manutenção</div>
+            <p>Verifique regularmente o estado de saúde de seus discos com smartctl:</p>
+            <div class="command">
+              <code>sudo smartctl -H /dev/sda</code>
+              <button class="copy-btn" data-command="sudo smartctl -H /dev/sda">Copiar</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Back to top button -->
+        <a href="#" id="backToTop" class="back-to-top">↑</a>
+
+        <!-- Script principal (seria incluído no final do corpo do documento) -->
+        <script>
+          // Ativar/desativar abas
+          document.addEventListener('DOMContentLoaded', function () {
+            // Gerenciamento de abas
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            tabBtns.forEach(button => {
+              button.addEventListener('click', function () {
+                const tabId = this.getAttribute('data-tab');
+                const tabContent = document.getElementById(tabId);
+
+                // Remover classe ativa de todas as abas
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                  btn.classList.remove('active');
+                });
+                document.querySelectorAll('.tab-content').forEach(content => {
+                  content.classList.remove('active');
+                });
+
+                // Ativar a aba selecionada
+                this.classList.add('active');
+                tabContent.classList.add('active');
+              });
+            });
+
+            // Copiar comandos para área de transferência
+            const copyButtons = document.querySelectorAll('.copy-btn');
+            copyButtons.forEach(button => {
+              button.addEventListener('click', function () {
+                const command = this.getAttribute('data-command');
+                navigator.clipboard.writeText(command).then(() => {
+                  const originalText = this.textContent;
+                  this.textContent = 'Copiado!';
+                  setTimeout(() => {
+                    this.textContent = originalText;
+                  }, 2000);
+                });
+              });
+            });
+
+            // Barra de progresso de rolagem
+            const progressBar = document.getElementById('progressBar');
+            window.addEventListener('scroll', function () {
+              const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+              const progress = (window.scrollY / totalHeight) * 100;
+              progressBar.style.width = progress + '%';
+
+              // Mostrar/esconder botão "voltar ao topo"
+              const backToTopBtn = document.getElementById('backToTop');
+              if (window.scrollY > 300) {
+                backToTopBtn.classList.add('visible');
+              } else {
+                backToTopBtn.classList.remove('visible');
+              }
+            });
+
+            // Botão voltar ao topo
+            const backToTopBtn = document.getElementById('backToTop');
+            backToTopBtn.addEventListener('click', function (e) {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // Menu mobile
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            mobileMenuBtn.addEventListener('click', function () {
+              const sidebar = document.querySelector('.sidebar');
+              sidebar.classList.toggle('active');
+            });
+
+            // Busca no conteúdo
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', function () {
+              const searchTerm = this.value.toLowerCase();
+              const sections = document.querySelectorAll('.section');
+
+              if (searchTerm.length < 2) {
+                sections.forEach(section => {
+                  section.style.display = 'block';
+                });
+                return;
+              }
+
+              sections.forEach(section => {
+                const text = section.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                  section.style.display = 'block';
+                  // Destacar a primeira ocorrência
+                  const firstMatch = text.indexOf(searchTerm);
+                  if (firstMatch !== -1) {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                } else {
+                  section.style.display = 'none';
+                }
+              });
+            });
+
+            // Alternância de tema claro/escuro
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.addEventListener('change', function () {
+              document.body.classList.toggle('dark-mode');
+
+              // Salvar preferência no localStorage
+              if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+              } else {
+                localStorage.setItem('theme', 'light');
+              }
+            });
+
+            // Verificar tema salvo
+            if (localStorage.getItem('theme') === 'dark') {
+              document.body.classList.add('dark-mode');
+              themeToggle.checked = true;
+            }
+
+            // Inicializar o visualizador de disco (canvas)
+            initDiskVisualizer();
+          });
+
+          // Função para inicializar o visualizador de disco
+          function initDiskVisualizer() {
+            const canvas = document.getElementById('diskCanvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+
+            // Definir largura e altura reais do canvas
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            // Desenhar exemplo de disco com partições
+            function drawDisk() {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+              const diskWidth = canvas.width * 0.9;
+              const diskHeight = canvas.height * 0.3;
+              const diskX = (canvas.width - diskWidth) / 2;
+              const diskY = canvas.height * 0.2;
+
+              // Desenhar o disco
+              ctx.fillStyle = '#e0e0e0';
+              ctx.beginPath();
+              ctx.roundRect(diskX, diskY, diskWidth, diskHeight, 10);
+              ctx.fill();
+              ctx.stroke();
+
+              // Desenhar partições
+              const partitions = [
+                { size: 0.1, color: '#ff9e80', label: 'EFI' },
+                { size: 0.3, color: '#b39ddb', label: '/boot' },
+                { size: 0.4, color: '#81d4fa', label: '/' },
+                { size: 0.2, color: '#a5d6a7', label: '/home' }
+              ];
+
+              let startX = diskX;
+              partitions.forEach(partition => {
+                const width = diskWidth * partition.size;
+
+                // Desenhar retângulo da partição
+                ctx.fillStyle = partition.color;
+                ctx.fillRect(startX, diskY, width, diskHeight);
+                ctx.strokeRect(startX, diskY, width, diskHeight);
+
+                // Adicionar rótulo
+                ctx.fillStyle = '#000';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(partition.label, startX + width / 2, diskY + diskHeight / 2);
+
+                startX += width;
+              });
+
+              // Adicionar legenda
+              const legendY = diskY + diskHeight + 30;
+              ctx.font = '14px Arial';
+              ctx.textAlign = 'left';
+
+              let legendX = diskX;
+              partitions.forEach(partition => {
+                ctx.fillStyle = partition.color;
+                ctx.fillRect(legendX, legendY, 20, 20);
+                ctx.strokeRect(legendX, legendY, 20, 20);
+
+                ctx.fillStyle = '#000';
+                ctx.fillText(partition.label, legendX + 25, legendY + 15);
+
+                legendX += 80;
+              });
+
+              // Adicionar título
+              ctx.font = 'bold 16px Arial';
+              ctx.textAlign = 'center';
+              ctx.fillText('Exemplo de Layout de Partições', canvas.width / 2, diskY - 20);
+            }
+
+            // Desenhar o disco
+            drawDisk();
+
+            // Redesenhar se a janela for redimensionada
+            window.addEventListener('resize', function () {
+              canvas.width = canvas.offsetWidth;
+              canvas.height = canvas.offsetHeight;
+              drawDisk();
+            });
+          }
+        </script>
+      </section>
+    </main>
+  </div>
+</body>
+
+</html>
